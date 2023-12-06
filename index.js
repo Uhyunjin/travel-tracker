@@ -18,16 +18,53 @@ const db = new pg.Client({
 });
 db.connect();
 
-app.get("/", async (req, res) => {
+async function checkVisisted() {
   const result = await db.query("SELECT country_code FROM visited_country");
   //DB와 연결, table name 꼭 확인
   // [&country-code:"FR"]
   let countries = [];
   result.rows.forEach((c) => countries.push(c.country_code));
   //countries = ["FR", "GB", ...]
-  console.log(result.rows);
+  console.log(countries);
+
+  return countries;
+};
+
+app.get("/", async (req, res) => {
+  const countries = await checkVisisted();
   res.render("index.ejs", { countries: countries, total: countries.length});
-  db.end();
+  // db.end();
+});
+
+app.post("/add", async (req, res) => {
+  const input = req.body["country"]
+  const result = await db.query(
+    "SELECT country_code FROM countries WHERE country_name = $1",
+   [input]);
+  // 입력된 나라의 코드 가져오기
+  // let countries = [];
+  // countries.push(inputName);
+  // const result = await db.query(
+  //   "SELECT country_code FROM countried WHERE country_name = $1",
+  // [input]
+  // );
+  console.log(input);
+  // console.log(result);
+  // console.log(input);
+  if (result.rows.length !== 0) {
+    const data = result.rows[0];
+    const countryCode = data.country_code;
+
+    await db.query(
+      "INSERT INTO visited_country (country_code) VALUES ($1)",
+      [countryCode]);
+    res.redirect("/");
+  } else{
+    console.log("no such country")
+    res.redirect("/");
+
+  }
+
 });
 
 app.listen(port, () => {
