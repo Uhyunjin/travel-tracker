@@ -14,17 +14,20 @@ const db = new pg.Client({
   host:"localhost",
   database:"world",
   password:"1234",
-  port: "5432",
+  port: 5433,
 });
 db.connect();
 
 app.get("/", async (req, res) => {
   const result = await db.query("SELECT country_code FROM visited_country");
   //DB와 연결, table name 꼭 확인
-
-
-
-  //Write your code here.
+  // [&country-code:"FR"]
+  let countries = [];
+  result.rows.forEach((c) => countries.push(c.country_code));
+  //countries = ["FR", "GB", ...]
+  console.log(result.rows);
+  res.render("index.ejs", { countries: countries, total: countries.length});
+  db.end();
 });
 
 app.listen(port, () => {
