@@ -5,8 +5,6 @@ import pg from "pg";
 const app = express();
 const port = 3000;
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
 
 // db연결하기
 const db = new pg.Client({
@@ -18,20 +16,24 @@ const db = new pg.Client({
 });
 db.connect();
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+
 async function checkVisisted() {
   const result = await db.query("SELECT country_code FROM visited_country");
   //DB와 연결, table name 꼭 확인
   // [&country-code:"FR"]
   let countries = [];
-  result.rows.forEach((c) => countries.push(c.country_code));
+  result.rows.forEach((c) => {countries.push(c.country_code)});
   //countries = ["FR", "GB", ...]
-  console.log(countries);
+  console.log(`function : ${countries}`);
 
   return countries;
 };
 
 app.get("/", async (req, res) => {
   const countries = await checkVisisted();
+  console.log(`get : ${countries}`);
   res.render("index.ejs", { countries: countries, total: countries.length});
   // db.end();
 });
@@ -48,7 +50,7 @@ app.post("/add", async (req, res) => {
   //   "SELECT country_code FROM countried WHERE country_name = $1",
   // [input]
   // );
-  console.log(input);
+  console.log(`post : ${input}`);
   // console.log(result);
   // console.log(input);
   if (result.rows.length !== 0) {
